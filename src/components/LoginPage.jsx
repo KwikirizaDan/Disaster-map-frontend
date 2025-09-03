@@ -1,12 +1,17 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-const LoginPage = () => {
+const LoginPage = ({ login }) => {
+  const navigate = useNavigate();
+
   const handleLogin = (e) => {
     e.preventDefault();
-    // In a real app, you would handle authentication here
-    alert('Logged in successfully (simulation)!');
-    // Here you would redirect the user, e.g., history.push('/')
+
+    // This is the function that actually sets the app to a "logged in" state
+    login();
+
+    // This will navigate the user to the dashboard after logging in
+    navigate('/');
   };
 
   return (
