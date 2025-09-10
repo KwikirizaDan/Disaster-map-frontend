@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import MainApp from './MainApp';
 import LoginPage from './components/LoginPage';
 import RegistrationPage from './components/RegistrationPage';
+import PublicMapPage from './components/PublicMapPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false); // Mock auth state
@@ -16,12 +17,14 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage login={login} />} />
         <Route path="/register" element={<RegistrationPage />} />
-        <Route
-          path="/*"
-          element={
-            isAuthenticated ? <MainApp logout={logout} /> : <Navigate to="/login" />
-          }
-        />
+        {isAuthenticated ? (
+          <Route path="/*" element={<MainApp logout={logout} />} />
+        ) : (
+          <>
+            <Route path="/" element={<PublicMapPage />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </>
+        )}
       </Routes>
     </Router>
   );
