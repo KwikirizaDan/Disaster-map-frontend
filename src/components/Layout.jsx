@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
 
-const Layout = ({ children, logout }) => {
+const Layout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const location = useLocation();
+  const showSidebar = location.pathname === '/';
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -11,13 +14,16 @@ const Layout = ({ children, logout }) => {
 
   return (
     <div className="flex flex-col h-screen">
-      <Header toggleSidebar={toggleSidebar} logout={logout} />
+      <Header toggleSidebar={toggleSidebar} />
       <div className="flex flex-grow overflow-hidden">
-        <Sidebar isSidebarOpen={isSidebarOpen} />
-        <main className={`${isSidebarOpen ? 'w-3/4' : 'w-full'} bg-[var(--dark-bg)] p-4 transition-all duration-300`}>
+        {showSidebar && <Sidebar isSidebarOpen={isSidebarOpen} />}
+        <main className={`${(showSidebar && isSidebarOpen) ? 'w-3/4' : 'w-full'} bg-[var(--dark-bg)] p-4 transition-all duration-300`}>
           {children}
         </main>
       </div>
+      <footer className="text-center p-2 bg-[var(--sidebar-bg)] text-xs text-[var(--text-secondary)]">
+        Powered by Binary Labs Solutions
+      </footer>
     </div>
   );
 };

@@ -1,11 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const RegistrationPage = () => {
-  const handleRegister = (e) => {
+  const { register } = useAuth();
+  const [feedback, setFeedback] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = async (e) => {
     e.preventDefault();
-    // In a real app, you would handle registration here
-    alert('Registration successful (simulation)!');
+    setFeedback('');
+    setLoading(true);
+
+    const name = e.target.name.value;
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+    const confirmPassword = e.target.confirmPassword.value;
+
+    if (password !== confirmPassword) {
+      setFeedback('Passwords do not match.');
+      setLoading(false);
+      return;
+    }
+
+    const result = await register(name, email, password);
+    setFeedback(result.message);
+    setLoading(false);
   };
 
   return (
@@ -33,8 +53,9 @@ const RegistrationPage = () => {
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Confirm Password</label>
             <input type="password" id="confirmPassword" name="confirmPassword" required className="w-full bg-[var(--surface-2)] border border-[var(--border-color)] rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
-          <button type="submit" className="w-full bg-[var(--accent-blue)] hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-            Create Account
+          {feedback && <p className="text-center text-sm text-red-500 mb-4">{feedback}</p>}
+          <button type="submit" disabled={loading} className="w-full bg-[var(--accent-blue)] hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 disabled:bg-gray-500">
+            {loading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
         <p className="text-center text-sm text-[var(--text-secondary)] mt-6">
