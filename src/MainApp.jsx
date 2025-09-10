@@ -8,9 +8,9 @@ import AddDevicePage from './components/AddDevicePage';
 import ViewDetailsPage from './components/ViewDetailsPage';
 import DisastersPage from './components/DisastersPage';
 
-const MainApp = ({ logout }) => {
+const MainApp = () => {
   return (
-    <Layout logout={logout}>
+    <Layout>
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/devices" element={<TablePage />} />

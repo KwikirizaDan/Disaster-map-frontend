@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
 
-const Layout = ({ children, logout }) => {
+const Layout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const toggleSidebar = () => {
@@ -11,7 +11,7 @@ const Layout = ({ children, logout }) => {
 
   return (
     <div className="flex flex-col h-screen">
-      <Header toggleSidebar={toggleSidebar} logout={logout} />
+      <Header toggleSidebar={toggleSidebar} />
       <div className="flex flex-grow overflow-hidden">
         <Sidebar isSidebarOpen={isSidebarOpen} />
         <main className={`${isSidebarOpen ? 'w-3/4' : 'w-full'} bg-[var(--dark-bg)] p-4 transition-all duration-300`}>
