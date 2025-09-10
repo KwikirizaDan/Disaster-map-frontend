@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
-const Header = ({ toggleSidebar, logout }) => {
+const Header = ({ toggleSidebar }) => {
+  const { user, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const activeLinkClass = "text-[var(--tab-active-text)] font-semibold border-b-2 border-[var(--tab-active-border)] pb-1";
@@ -22,7 +24,7 @@ const Header = ({ toggleSidebar, logout }) => {
             <NavLink to="/" className={({ isActive }) => isActive ? activeLinkClass : inactiveLinkClass}>Dashboard</NavLink>
             <NavLink to="/alerts" className={({ isActive }) => isActive ? activeLinkClass : inactiveLinkClass}>Alerts</NavLink>
             <NavLink to="/reports" className={({ isActive }) => isActive ? activeLinkClass : inactiveLinkClass}>Reports</NavLink>
-            <NavLink to="/devices" className={({ isActive }) => isActive ? activeLinkClass : inactiveLinkClass}>Devices</NavLink>
+            <NavLink to="/disasters" className={({ isActive }) => isActive ? activeLinkClass : inactiveLinkClass}>Disasters</NavLink>
           </nav>
         </div>
         <div className="flex items-center space-x-4">
@@ -36,7 +38,7 @@ const Header = ({ toggleSidebar, logout }) => {
           <div className="relative">
             <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex items-center space-x-2">
               <img alt="User avatar" className="w-8 h-8 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoFpERwYVYCiFsQPRROIvgY5LI0nSSG5zxmpSFDdkuFJkr6Pt0aJoiSpRoKne8T30RLxjrqane-vt5SBMI48H1rZrIiczEi8awezP90dSKBAcrgirKDfwdnJiH1IXr88-nT_hlGqP8Nt3lkXoffth-PzrI4xpvH7_flZh-KrfPBn5Qo2YkYn6vn9t8RVZHJdoxuZG1fmgmVtBSzaI2QmpNV9B28iQFR7JH0VvYHQl4uI4f0U6mzUOKCIGKuYMmTpN6KKMGeZKl0DQ" />
-              <span className="text-sm font-medium text-white hidden sm:inline">Jane Doe</span>
+              <span className="text-sm font-medium text-white hidden sm:inline">{user?.name || 'User'}</span>
               <span className="material-icons text-sm text-[var(--text-secondary)] hidden sm:inline">expand_more</span>
             </button>
             {isDropdownOpen && (

@@ -1,17 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
-const LoginPage = ({ login }) => {
+const LoginPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const [feedback, setFeedback] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setFeedback('');
+    setLoading(true);
 
-    // This is the function that actually sets the app to a "logged in" state
-    login();
+    const email = e.target.email.value;
+    const password = e.target.password.value;
 
-    // This will navigate the user to the dashboard after logging in
-    navigate('/');
+    const result = await login(email, password);
+
+    if (result.success) {
+      navigate('/');
+    } else {
+      setFeedback(result.message);
+      setLoading(false);
+    }
   };
 
   return (
@@ -31,8 +43,9 @@ const LoginPage = ({ login }) => {
             <label htmlFor="password" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Password</label>
             <input type="password" id="password" name="password" required className="w-full bg-[var(--surface-2)] border border-[var(--border-color)] rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
-          <button type="submit" className="w-full bg-[var(--accent-blue)] hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-            Login
+          {feedback && <p className="text-center text-sm text-red-500 mb-4">{feedback}</p>}
+          <button type="submit" disabled={loading} className="w-full bg-[var(--accent-blue)] hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 disabled:bg-gray-500">
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
         <p className="text-center text-sm text-[var(--text-secondary)] mt-6">
