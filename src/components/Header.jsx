@@ -22,6 +22,7 @@ const Header = ({ toggleSidebar, logout }) => {
             <NavLink to="/" className={({ isActive }) => isActive ? activeLinkClass : inactiveLinkClass}>Dashboard</NavLink>
             <NavLink to="/alerts" className={({ isActive }) => isActive ? activeLinkClass : inactiveLinkClass}>Alerts</NavLink>
             <NavLink to="/reports" className={({ isActive }) => isActive ? activeLinkClass : inactiveLinkClass}>Reports</NavLink>
+            <NavLink to="/disasters" className={({ isActive }) => isActive ? activeLinkClass : inactiveLinkClass}>Disasters</NavLink>
             <NavLink to="/devices" className={({ isActive }) => isActive ? activeLinkClass : inactiveLinkClass}>Devices</NavLink>
           </nav>
         </div>
