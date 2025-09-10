@@ -1,24 +1,30 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+// Create a context for authentication
 const AuthContext = createContext(null);
 
+// Custom hook to use the auth context
 export const useAuth = () => {
   return useContext(AuthContext);
 };
 
+// AuthProvider component that will wrap the application
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null); // State to hold user data
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // State to check if user is authenticated
+  const [loading, setLoading] = useState(true); // State to handle loading state of auth checks
 
+  // Effect to check for an active session when the component mounts
   useEffect(() => {
     const checkSession = async () => {
       try {
+        // Attempt to fetch the user's profile
         const response = await fetch('https://disastermap.vercel.app/api/auth/profile', {
-          credentials: 'include',
+          credentials: 'include', // Necessary to send the session cookie
         });
 
         if (response.ok) {
+          // If the request is successful, the user has a valid session
           const userData = await response.json();
           setUser(userData);
           setIsAuthenticated(true);
@@ -26,6 +32,7 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error("Session check failed", error);
       } finally {
+        // Stop loading once the check is complete
         setLoading(false);
       }
     };
@@ -33,6 +40,7 @@ export const AuthProvider = ({ children }) => {
     checkSession();
   }, []);
 
+  // Function to handle user registration
   const register = async (name, email, password) => {
     setLoading(true);
     try {
@@ -43,13 +51,8 @@ export const AuthProvider = ({ children }) => {
         },
         body: JSON.stringify({ name, email, password }),
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to register');
-      }
-
+      if (!response.ok) throw new Error(data.message || 'Failed to register');
       return { success: true, message: data.message };
     } catch (error) {
       return { success: false, message: error.message };
@@ -58,6 +61,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Function to handle user login
   const login = async (email, password) => {
     setLoading(true);
     try {
@@ -67,21 +71,15 @@ export const AuthProvider = ({ children }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
-        credentials: 'include', // Important for sending the session cookie
+        credentials: 'include',
       });
-
       const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to login');
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to login');
-      }
-
-      // After a successful login, the session is established.
-      // We can now fetch the user's profile to get their data.
+      // On successful login, fetch profile to update user state
       const profileResponse = await fetch('https://disastermap.vercel.app/api/auth/profile', {
         credentials: 'include',
       });
-
       if (profileResponse.ok) {
         const userData = await profileResponse.json();
         setUser(userData);
@@ -97,6 +95,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Function to handle user logout
   const logout = async () => {
     setLoading(true);
     try {
@@ -107,22 +106,20 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("Logout failed", error);
     } finally {
+      // Clear user state regardless of API call success
       setUser(null);
       setIsAuthenticated(false);
       setLoading(false);
     }
   };
 
+  // Function to handle email verification
   const verifyEmail = async (code) => {
     setLoading(true);
     try {
       const response = await fetch(`https://disastermap.vercel.app/api/auth/verify-email/${code}`);
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to verify email');
-      }
-
+      if (!response.ok) throw new Error(data.message || 'Failed to verify email');
       return { success: true, message: data.message };
     } catch (error) {
       return { success: false, message: error.message };
@@ -131,14 +128,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Helper function to check if the user is an admin
   const isAdmin = () => {
     return user?.role === 'admin';
   };
 
+  // Helper function to check if the user is a reporter
   const isReporter = () => {
     return user?.role === 'reporter';
   };
 
+  // Function to create a new disaster
   const createDisaster = async (disasterData) => {
     setLoading(true);
     try {
@@ -150,13 +150,8 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify(disasterData),
         credentials: 'include',
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create disaster');
-      }
-
+      if (!response.ok) throw new Error(data.message || 'Failed to create disaster');
       return { success: true, message: data.message, disaster: data.disaster };
     } catch (error) {
       return { success: false, message: error.message };
@@ -165,6 +160,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Function to update an existing disaster
   const updateDisaster = async (id, disasterData) => {
     setLoading(true);
     try {
@@ -176,13 +172,8 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify(disasterData),
         credentials: 'include',
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to update disaster');
-      }
-
+      if (!response.ok) throw new Error(data.message || 'Failed to update disaster');
       return { success: true, message: data.message };
     } catch (error) {
       return { success: false, message: error.message };
@@ -191,6 +182,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Function to delete a disaster
   const deleteDisaster = async (id) => {
     setLoading(true);
     try {
@@ -198,13 +190,8 @@ export const AuthProvider = ({ children }) => {
         method: 'DELETE',
         credentials: 'include',
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to delete disaster');
-      }
-
+      if (!response.ok) throw new Error(data.message || 'Failed to delete disaster');
       return { success: true, message: data.message };
     } catch (error) {
       return { success: false, message: error.message };
@@ -213,6 +200,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // The value provided to the context consumers
   const value = {
     user,
     isAuthenticated,

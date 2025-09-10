@@ -21,6 +21,9 @@ const Layout = ({ children }) => {
           {children}
         </main>
       </div>
+      <footer className="text-center p-2 bg-[var(--sidebar-bg)] text-xs text-[var(--text-secondary)]">
+        Powered by Binary Labs Solutions
+      </footer>
     </div>
   );
 };

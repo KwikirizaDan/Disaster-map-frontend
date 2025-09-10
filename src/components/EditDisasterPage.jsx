@@ -3,14 +3,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient';
 
+// This component provides a form to edit an existing disaster report.
 const EditDisasterPage = () => {
-  const { id } = useParams();
-  const { updateDisaster } = useAuth();
+  const { id } = useParams(); // Get the disaster ID from the URL
+  const { updateDisaster } = useAuth(); // Function to call the update disaster API
   const navigate = useNavigate();
-  const [disaster, setDisaster] = useState(null);
+  const [disaster, setDisaster] = useState(null); // State for the disaster data
   const [feedback, setFeedback] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // Fetch the existing disaster data when the component mounts
   useEffect(() => {
     const fetchDisaster = async () => {
       try {
@@ -19,7 +21,7 @@ const EditDisasterPage = () => {
           throw new Error('Network response was not ok');
         }
         const data = await response.json();
-        setDisaster(data);
+        setDisaster(data); // Pre-fill the form with this data
       } catch (error) {
         setFeedback(error.message);
       } finally {
@@ -29,6 +31,7 @@ const EditDisasterPage = () => {
     fetchDisaster();
   }, [id]);
 
+  // Handles the form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -39,6 +42,7 @@ const EditDisasterPage = () => {
     const imageFile = formData.get('image');
 
     try {
+      // If a new image is provided, upload it to Supabase
       if (imageFile && imageFile.size > 0) {
         const fileName = `${Date.now()}_${imageFile.name}`;
         const { error: uploadError } = await supabase.storage
@@ -53,17 +57,18 @@ const EditDisasterPage = () => {
         disasterData.image_url = publicUrl;
       }
 
-      // Convert to correct types
+      // Convert form data to correct types
       disasterData.casualties = parseInt(disasterData.casualties, 10) || null;
       disasterData.damage_estimate = parseFloat(disasterData.damage_estimate) || null;
 
       delete disasterData.image;
 
+      // Call the API to update the disaster
       const result = await updateDisaster(id, disasterData);
 
       if (result.success) {
         setFeedback('Disaster updated successfully!');
-        setTimeout(() => navigate(`/disasters/${id}`), 1000);
+        setTimeout(() => navigate(`/disasters/${id}`), 1000); // Redirect back to details page
       } else {
         throw new Error(result.message);
       }
@@ -74,6 +79,7 @@ const EditDisasterPage = () => {
     }
   };
 
+  // Show loading state while fetching initial data
   if (loading || !disaster) {
     return <div className="text-white">Loading...</div>;
   }
@@ -82,6 +88,7 @@ const EditDisasterPage = () => {
     <div className="p-4 bg-[var(--main-container-bg)] text-white rounded-xl shadow-lg">
       <h1 className="text-2xl font-bold mb-4">Edit Disaster</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* The form is pre-filled with existing disaster data using defaultValue */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Title*</label>

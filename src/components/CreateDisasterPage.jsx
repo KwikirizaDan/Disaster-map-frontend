@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient';
 
+// This component provides a form for creating a new disaster report.
 const CreateDisasterPage = () => {
-  const { createDisaster } = useAuth();
+  const { createDisaster } = useAuth(); // Function to call the create disaster API
   const navigate = useNavigate();
-  const [feedback, setFeedback] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState(''); // State for user feedback messages
+  const [loading, setLoading] = useState(false); // State to disable form during submission
 
+  // Handles the form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -19,31 +21,35 @@ const CreateDisasterPage = () => {
     const imageFile = formData.get('image');
 
     try {
+      // If an image is provided, upload it to Supabase first
       if (imageFile && imageFile.size > 0) {
         const fileName = `${Date.now()}_${imageFile.name}`;
-        const { data, error } = await supabase.storage
-          .from('disaster-images')
+        const { error: uploadError } = await supabase.storage
+          .from('disaster-images') // Assumes a 'disaster-images' bucket in Supabase
           .upload(fileName, imageFile);
 
-        if (error) {
-          throw new Error('Image upload failed: ' + error.message);
+        if (uploadError) {
+          throw new Error('Image upload failed: ' + uploadError.message);
         }
 
+        // Get the public URL of the uploaded image
         const { data: { publicUrl } } = supabase.storage.from('disaster-images').getPublicUrl(fileName);
         disasterData.image_url = publicUrl;
       }
 
-      // Convert to correct types
+      // Convert form data to correct types before sending to API
       disasterData.casualties = parseInt(disasterData.casualties, 10) || null;
       disasterData.damage_estimate = parseFloat(disasterData.damage_estimate) || null;
 
-      delete disasterData.image; // remove the file object before sending to our backend
+      // Remove the file object from the data sent to our backend
+      delete disasterData.image;
 
+      // Call the API to create the disaster
       const result = await createDisaster(disasterData);
 
       if (result.success) {
         setFeedback('Disaster created successfully!');
-        setTimeout(() => navigate(`/disasters`), 1000);
+        setTimeout(() => navigate(`/disasters`), 1000); // Redirect after a short delay
       } else {
         throw new Error(result.message);
       }
@@ -59,6 +65,7 @@ const CreateDisasterPage = () => {
       <h1 className="text-2xl font-bold mb-4">Create New Disaster</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Form fields for disaster data */}
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Title*</label>
             <input type="text" id="title" name="title" required className="w-full bg-[var(--surface-2)] border border-[var(--border-color)] rounded-md shadow-sm py-2 px-3" />
@@ -117,6 +124,7 @@ const CreateDisasterPage = () => {
           <input type="text" id="potential_solutions" name="potential_solutions" className="w-full bg-[var(--surface-2)] border border-[var(--border-color)] rounded-md shadow-sm py-2 px-3" />
         </div>
 
+        {/* Display feedback messages */}
         {feedback && <p className="text-center text-sm text-red-500 mb-4">{feedback}</p>}
 
         <div className="flex justify-end">
