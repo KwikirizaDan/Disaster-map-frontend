@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
     const checkSession = async () => {
       try {
         // Attempt to fetch the user's profile
-        const response = await fetch('https://disastermap.vercel.app/api/auth/profile', {
+        const response = await fetch('http://127.0.0.1:5000/api/auth/profile', {
           credentials: 'include', // Necessary to send the session cookie
         });
 
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (name, email, password) => {
     setLoading(true);
     try {
-      const response = await fetch('https://disastermap.vercel.app/api/auth/register', {
+      const response = await fetch('http://127.0.0.1:5000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     setLoading(true);
     try {
-      const response = await fetch('https://disastermap.vercel.app/api/auth/login', {
+      const response = await fetch('http://127.0.0.1:5000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }) => {
       if (!response.ok) throw new Error(data.message || 'Failed to login');
 
       // On successful login, fetch profile to update user state
-      const profileResponse = await fetch('https://disastermap.vercel.app/api/auth/profile', {
+      const profileResponse = await fetch('http://127.0.0.1:5000/api/auth/profile', {
         credentials: 'include',
       });
       if (profileResponse.ok) {
@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     setLoading(true);
     try {
-      await fetch('https://disastermap.vercel.app/api/auth/logout', {
+      await fetch('http://127.0.0.1:5000/api/auth/logout', {
         method: 'POST',
         credentials: 'include',
       });
@@ -117,7 +117,7 @@ export const AuthProvider = ({ children }) => {
   const verifyEmail = async (code) => {
     setLoading(true);
     try {
-      const response = await fetch(`https://disastermap.vercel.app/api/auth/verify-email/${code}`);
+      const response = await fetch(`http://127.0.0.1:5000/api/auth/verify-email/${code}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Failed to verify email');
       return { success: true, message: data.message };
@@ -142,7 +142,7 @@ export const AuthProvider = ({ children }) => {
   const createDisaster = async (disasterData) => {
     setLoading(true);
     try {
-      const response = await fetch('https://disastermap.vercel.app/api/disasters', {
+      const response = await fetch('http://127.0.0.1:5000/api/disasters', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -164,7 +164,7 @@ export const AuthProvider = ({ children }) => {
   const updateDisaster = async (id, disasterData) => {
     setLoading(true);
     try {
-      const response = await fetch(`https://disastermap.vercel.app/api/disasters/${id}`, {
+      const response = await fetch(`http://127.0.0.1:5000/api/disasters/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -186,7 +186,7 @@ export const AuthProvider = ({ children }) => {
   const deleteDisaster = async (id) => {
     setLoading(true);
     try {
-      const response = await fetch(`https://disastermap.vercel.app/api/disasters/${id}`, {
+      const response = await fetch(`http://127.0.0.1:5000/api/disasters/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
