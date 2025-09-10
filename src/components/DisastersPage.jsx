@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import { useAuth } from '../contexts/AuthContext';
 
 const DisastersPage = () => {
+  const { isAdmin, isReporter } = useAuth();
+  const navigate = useNavigate();
   const [disasters, setDisasters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,12 +51,19 @@ const DisastersPage = () => {
     <div className="p-4 bg-[var(--main-container-bg)] text-white rounded-xl shadow-lg">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Disasters</h1>
-        <button
-          onClick={handleExport}
-          className="bg-[var(--accent-blue)] hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
-        >
-          Export to Excel
-        </button>
+        <div>
+          {(isAdmin() || isReporter()) && (
+            <Link to="/disasters/new" className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 mr-2">
+              Create Disaster
+            </Link>
+          )}
+          <button
+            onClick={handleExport}
+            className="bg-[var(--accent-blue)] hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+          >
+            Export to Excel
+          </button>
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-[var(--surface-2)] text-white">
@@ -71,7 +82,7 @@ const DisastersPage = () => {
           </thead>
           <tbody>
             {disasters.map((disaster) => (
-              <tr key={disaster.id} className="hover:bg-[var(--surface-1)]">
+              <tr key={disaster.id} onClick={() => navigate(`/disasters/${disaster.id}`)} className="hover:bg-[var(--surface-1)] cursor-pointer">
                 <td className="py-2 px-4 border-b border-[var(--border-color)] text-sm">{disaster.id}</td>
                 <td className="py-2 px-4 border-b border-[var(--border-color)]">{disaster.title}</td>
                 <td className="py-2 px-4 border-b border-[var(--border-color)]">{disaster.type}</td>

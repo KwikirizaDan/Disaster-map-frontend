@@ -131,6 +131,88 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const isAdmin = () => {
+    return user?.role === 'admin';
+  };
+
+  const isReporter = () => {
+    return user?.role === 'reporter';
+  };
+
+  const createDisaster = async (disasterData) => {
+    setLoading(true);
+    try {
+      const response = await fetch('https://disastermap.vercel.app/api/disasters', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(disasterData),
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create disaster');
+      }
+
+      return { success: true, message: data.message, disaster: data.disaster };
+    } catch (error) {
+      return { success: false, message: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateDisaster = async (id, disasterData) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`https://disastermap.vercel.app/api/disasters/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(disasterData),
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update disaster');
+      }
+
+      return { success: true, message: data.message };
+    } catch (error) {
+      return { success: false, message: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteDisaster = async (id) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`https://disastermap.vercel.app/api/disasters/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to delete disaster');
+      }
+
+      return { success: true, message: data.message };
+    } catch (error) {
+      return { success: false, message: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const value = {
     user,
     isAuthenticated,
@@ -139,6 +221,11 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     verifyEmail,
+    isAdmin,
+    isReporter,
+    createDisaster,
+    updateDisaster,
+    deleteDisaster,
   };
 
   return (
