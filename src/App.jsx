@@ -24,6 +24,8 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegistrationPage />} />
         <Route path="/verify-email/:code" element={<VerifyEmailPage />} />
+        {/* Add any additional common routes here if needed */}
+          
         {isAuthenticated ? (
           <Route path="/*" element={<MainApp logout={logout} />} />
         ) : (
@@ -32,6 +34,9 @@ function App() {
             <Route path="*" element={<Navigate to="/" />} />
           </>
         )}
+          
+
+      
       </Routes>
     </Router>
   );
