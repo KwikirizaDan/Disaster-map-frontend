@@ -21,34 +21,13 @@ function App() {
   }
 
   return (
-<<<<<<< HEAD
-    <Router>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegistrationPage />} />
-        <Route path="/verify-email/:code" element={<VerifyEmailPage />} />
-        {/* Add any additional common routes here if needed */}
-          
-        {isAuthenticated ? (
-          <Route path="/*" element={<MainApp logout={logout} />} />
-        ) : (
-          <>
-            <Route path="/" element={<PublicMapPage />} />
-            <Route path="*" element={<Navigate to="/" />} />
-          </>
-        )}
-          
-
-      
-      </Routes>
-    </Router>
-=======
     <MantineProvider withGlobalStyles withNormalizeCSS theme={{ colorScheme: 'dark' }}>
       <Router>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegistrationPage />} />
           <Route path="/verify-email/:code" element={<VerifyEmailPage />} />
+
           {isAuthenticated ? (
             <Route path="/*" element={<MainApp logout={logout} />} />
           ) : (
@@ -60,7 +39,6 @@ function App() {
         </Routes>
       </Router>
     </MantineProvider>
->>>>>>> refs/remotes/origin/feature/react-dashboard-conversion
   );
 }
 
