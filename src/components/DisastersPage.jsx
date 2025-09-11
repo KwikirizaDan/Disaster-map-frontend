@@ -1,7 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MantineReactTable } from 'mantine-react-table';
-import { Button, Box, Flex } from '@mantine/core';
 import { useAuth } from '../contexts/AuthContext';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -31,14 +29,13 @@ const DisastersPage = () => {
     fetchDisasters();
   }, []);
 
-  const handleExport = (rows) => {
-    const rowData = rows.map((row) => row.original);
-    const worksheet = XLSX.utils.json_to_sheet(rowData);
+  const handleExport = (data) => {
+    const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Disasters');
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
-    saveAs(data, 'disasters.xlsx');
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(blob, 'disasters.xlsx');
   };
 
   const handleDelete = async (id) => {
@@ -64,98 +61,73 @@ const DisastersPage = () => {
     }
   };
 
-  const columns = useMemo(
-    () => [
-      {
-        accessorKey: 'title',
-        header: 'Title',
-      },
-      {
-        accessorKey: 'type',
-        header: 'Type',
-      },
-      {
-        accessorKey: 'status',
-        header: 'Status',
-      },
-      {
-        accessorKey: 'severity',
-        header: 'Severity',
-      },
-      {
-        accessorKey: 'location_name',
-        header: 'Location',
-      },
-      {
-        accessorKey: 'casualties',
-        header: 'Casualties',
-      },
-      {
-        accessorKey: 'damage_estimate',
-        header: 'Damage Est.',
-      },
-      {
-        accessorKey: 'reported_at',
-        header: 'Reported At',
-        cell: ({ cell }) => new Date(cell.getValue()).toLocaleDateString(),
-      },
-    ],
-    [],
-  );
-
   if (loading) return <div className="text-white">Loading...</div>;
   if (error) return <div className="text-white">Error: {error.message}</div>;
 
   return (
     <div className="p-4 bg-[var(--main-container-bg)] text-white rounded-xl shadow-lg h-full flex flex-col">
-       <h1 className="text-2xl font-bold mb-4">Disasters</h1>
-       <Box sx={{ overflow: 'auto' }}>
-        <MantineReactTable
-            columns={columns}
-            data={disasters}
-            enableRowSelection
-            enableColumnOrdering
-            enableGlobalFilter={true}
-            enableRowActions
-            renderRowActions={({ row }) => (
-                <Flex gap="md">
-                <Button variant="filled" color="blue" onClick={() => navigate(`/disasters/edit/${row.original.id}`)}>Edit</Button>
-                <Button variant="filled" color="red" onClick={() => handleDelete(row.original.id)}>Delete</Button>
-                </Flex>
-            )}
-            renderTopToolbarCustomActions={({ table }) => (
-            <Box sx={{ display: 'flex', gap: '8px', padding: '8px' }}>
-                {(isAdmin() || isReporter()) && (
-                <Button color="green" onClick={() => navigate('/disasters/new')} variant="filled">
-                Add Disaster
-                </Button>
-                )}
-                <Button
-                onClick={() => handleExport(table.getCoreRowModel().rows)}
-                variant="filled"
-                >
-                Export All Data
-                </Button>
-                <Button
-                disabled={table.getSelectedRowModel().rows.length === 0}
-                onClick={() => handleExport(table.getSelectedRowModel().rows)}
-                variant="filled"
-                >
-                Export Selected Rows
-                </Button>
-            </Box>
-            )}
-            mantineTableProps={{
-                sx: {
-                    tableLayout: 'fixed',
-                    backgroundColor: '#1a1b1e',
-                },
-                }}
-                mantineTheme={{
-                colorScheme: 'dark',
-                }}
-        />
-       </Box>
+      <h1 className="text-2xl font-bold mb-4">Disasters</h1>
+      <div className="flex gap-2 mb-4">
+        {(isAdmin() || isReporter()) && (
+          <button
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+            onClick={() => navigate('/disasters/new')}
+          >
+            Add Disaster
+          </button>
+        )}
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          onClick={() => handleExport(disasters)}
+        >
+          Export All Data
+        </button>
+      </div>
+      <div className="overflow-auto">
+        <table className="w-full text-sm text-left text-gray-400">
+          <thead className="text-xs text-gray-100 uppercase bg-gray-700">
+            <tr>
+              <th scope="col" className="px-6 py-3">Title</th>
+              <th scope="col" className="px-6 py-3">Type</th>
+              <th scope="col" className="px-6 py-3">Status</th>
+              <th scope="col" className="px-6 py-3">Severity</th>
+              <th scope="col" className="px-6 py-3">Location</th>
+              <th scope="col" className="px-6 py-3">Casualties</th>
+              <th scope="col" className="px-6 py-3">Damage Est.</th>
+              <th scope="col" className="px-6 py-3">Reported At</th>
+              <th scope="col" className="px-6 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {disasters.map((disaster) => (
+              <tr key={disaster.id} className="bg-gray-800 border-b border-gray-700 hover:bg-gray-600">
+                <td className="px-6 py-4">{disaster.title}</td>
+                <td className="px-6 py-4">{disaster.type}</td>
+                <td className="px-6 py-4">{disaster.status}</td>
+                <td className="px-6 py-4">{disaster.severity}</td>
+                <td className="px-6 py-4">{disaster.location_name}</td>
+                <td className="px-6 py-4">{disaster.casualties}</td>
+                <td className="px-6 py-4">{disaster.damage_estimate}</td>
+                <td className="px-6 py-4">{new Date(disaster.reported_at).toLocaleDateString()}</td>
+                <td className="px-6 py-4 flex gap-2">
+                  <button
+                    className="font-medium text-blue-500 hover:underline"
+                    onClick={() => navigate(`/disasters/edit/${disaster.id}`)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="font-medium text-red-500 hover:underline"
+                    onClick={() => handleDelete(disaster.id)}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
