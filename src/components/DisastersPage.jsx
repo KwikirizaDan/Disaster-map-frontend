@@ -1,8 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
+import { AgGridReact } from 'ag-grid-react';
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
+import ActionsCellRenderer from './ActionsCellRenderer';
+import pdfMake from "pdfmake/build/pdfmake";
+import pdfFonts from "pdfmake/build/vfs_fonts";
+pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 const DisastersPage = () => {
   const { isAdmin, isReporter, token } = useAuth();
@@ -10,6 +15,8 @@ const DisastersPage = () => {
   const [disasters, setDisasters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const gridRef = useRef();
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     const fetchDisasters = async () => {
@@ -29,36 +36,68 @@ const DisastersPage = () => {
     fetchDisasters();
   }, []);
 
-  const handleExport = (data) => {
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Disasters');
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-    saveAs(blob, 'disasters.xlsx');
+  const columnDefs = [
+    { field: 'title', sortable: true, filter: true },
+    { field: 'type', sortable: true, filter: true },
+    { field: 'status', sortable: true, filter: true },
+    { field: 'severity', sortable: true, filter: true },
+    { field: 'location_name', headerName: 'Location', sortable: true, filter: true },
+    { field: 'casualties', sortable: true, filter: true },
+    { field: 'damage_estimate', headerName: 'Damage Est.', sortable: true, filter: true },
+    { field: 'reported_at', valueFormatter: params => new Date(params.value).toLocaleDateString(), sortable: true, filter: true },
+    {
+      headerName: 'Actions',
+      cellRenderer: ActionsCellRenderer,
+      cellRendererParams: {
+        token: token,
+      },
+      flex: 1,
+    },
+  ];
+
+  useEffect(() => {
+    if (gridRef.current && gridRef.current.api) {
+      gridRef.current.api.setQuickFilter(searchText);
+    }
+  }, [searchText]);
+
+  const handleExportCsv = () => {
+    gridRef.current.api.exportDataAsCsv();
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this disaster?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`https://disastermap.vercel.app/api/disasters/${id}`, {
-        method: 'DELETE',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
+  const handleExportPdf = () => {
+    const gridApi = gridRef.current.api;
+    const columns = gridApi.getColumnDefs();
+    const headers = columns.map(col => col.headerName || col.field).filter(h => h !== 'Actions');
+    const body = [];
+    gridApi.forEachNodeAfterFilterAndSort(node => {
+      const row = headers.map(header => {
+        const colId = columns.find(c => (c.headerName || c.field) === header).field;
+        return node.data[colId];
       });
+      body.push(row);
+    });
 
-      if (!response.ok) {
-        throw new Error('Failed to delete disaster');
+    const docDefinition = {
+      content: [
+        { text: 'Disasters Report', style: 'header' },
+        {
+          table: {
+            headerRows: 1,
+            widths: Array(headers.length).fill('*'),
+            body: [headers, ...body]
+          }
+        }
+      ],
+      styles: {
+        header: {
+          fontSize: 18,
+          bold: true,
+          margin: [0, 0, 0, 10]
+        }
       }
-
-      setDisasters(disasters.filter((d) => d.id !== id));
-    } catch (error) {
-      setError(error);
-    }
+    };
+    pdfMake.createPdf(docDefinition).download('disasters.pdf');
   };
 
   if (loading) return <div className="text-white">Loading...</div>;
@@ -68,6 +107,13 @@ const DisastersPage = () => {
     <div className="p-4 bg-[var(--main-container-bg)] text-white rounded-xl shadow-lg h-full flex flex-col">
       <h1 className="text-2xl font-bold mb-4">Disasters</h1>
       <div className="flex gap-2 mb-4">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          className="p-2 border border-gray-600 rounded bg-gray-700 text-white"
+        />
         {(isAdmin() || isReporter()) && (
           <button
             className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
@@ -78,55 +124,24 @@ const DisastersPage = () => {
         )}
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => handleExport(disasters)}
+          onClick={handleExportCsv}
         >
-          Export All Data
+          Export to Excel
+        </button>
+        <button
+          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+          onClick={handleExportPdf}
+        >
+          Export to PDF
         </button>
       </div>
-      <div className="overflow-auto">
-        <table className="w-full text-sm text-left text-gray-400">
-          <thead className="text-xs text-gray-100 uppercase bg-gray-700">
-            <tr>
-              <th scope="col" className="px-6 py-3">Title</th>
-              <th scope="col" className="px-6 py-3">Type</th>
-              <th scope="col" className="px-6 py-3">Status</th>
-              <th scope="col" className="px-6 py-3">Severity</th>
-              <th scope="col" className="px-6 py-3">Location</th>
-              <th scope="col" className="px-6 py-3">Casualties</th>
-              <th scope="col" className="px-6 py-3">Damage Est.</th>
-              <th scope="col" className="px-6 py-3">Reported At</th>
-              <th scope="col" className="px-6 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {disasters.map((disaster) => (
-              <tr key={disaster.id} className="bg-gray-800 border-b border-gray-700 hover:bg-gray-600">
-                <td className="px-6 py-4">{disaster.title}</td>
-                <td className="px-6 py-4">{disaster.type}</td>
-                <td className="px-6 py-4">{disaster.status}</td>
-                <td className="px-6 py-4">{disaster.severity}</td>
-                <td className="px-6 py-4">{disaster.location_name}</td>
-                <td className="px-6 py-4">{disaster.casualties}</td>
-                <td className="px-6 py-4">{disaster.damage_estimate}</td>
-                <td className="px-6 py-4">{new Date(disaster.reported_at).toLocaleDateString()}</td>
-                <td className="px-6 py-4 flex gap-2">
-                  <button
-                    className="font-medium text-blue-500 hover:underline"
-                    onClick={() => navigate(`/disasters/edit/${disaster.id}`)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="font-medium text-red-500 hover:underline"
-                    onClick={() => handleDelete(disaster.id)}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="ag-theme-alpine-dark" style={{ height: '100%', width: '100%' }}>
+        <AgGridReact
+          ref={gridRef}
+          rowData={disasters}
+          columnDefs={columnDefs}
+          domLayout='autoHeight'
+        />
       </div>
     </div>
   );
