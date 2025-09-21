@@ -1,155 +1,169 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-// =========================
-// Auth Context Setup
-// =========================
-
-// Create a context for authentication
 const AuthContext = createContext(null);
-
-// Custom hook to access authentication context
 export const useAuth = () => useContext(AuthContext);
 
-// Base API URL (centralized in case it changes later)
 const API_BASE = "http://127.0.0.1:5000";
 
-// =========================
-// Auth Provider
-// =========================
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // Holds current user info
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // Login state
-  const [loading, setLoading] = useState(true); // Loading indicator
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // -------------------------
-  // Check for active session (on mount)
-  // -------------------------
+  // Helper function to get auth headers
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("authToken");
+    return {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    };
+  };
+
+  // Check if user is authenticated on app load
   useEffect(() => {
-    const checkSession = async () => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem("authToken");
+      
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const response = await fetch(`${API_BASE}/auth/profile`, {
-          // If using sessions/cookies:
-          credentials: "include",
-          // If using JWT:
-          // headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          method: "GET",
+          headers: getAuthHeaders(),
+          credentials: "include", // Important for cookies/sessions
         });
 
         if (response.ok) {
           const userData = await response.json();
           setUser(userData);
           setIsAuthenticated(true);
+        } else if (response.status === 401) {
+          // Token expired or invalid
+          localStorage.removeItem("authToken");
+          console.log("Token invalid, requiring re-login");
         }
       } catch (error) {
-        console.error("Session check failed:", error);
+        console.error("Auth check failed:", error);
+        localStorage.removeItem("authToken");
       } finally {
         setLoading(false);
       }
     };
 
-    checkSession();
+    checkAuth();
   }, []);
 
-  // -------------------------
-  // Register a new user
-  // -------------------------
+  // Register user - FIXED with credentials: "include"
   const register = async (name, email, password) => {
     setLoading(true);
     try {
       const response = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // CRITICAL FIX - Add this line
         body: JSON.stringify({ name, email, password }),
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to register");
+      
+      if (!response.ok) {
+        return { 
+          success: false, 
+          message: data.message || `Failed to register (Status: ${response.status})` 
+        };
+      }
 
-      return { success: true, message: data.message };
+      return { 
+        success: true, 
+        message: data.message || "Registration successful",
+        user: data.user // If your backend returns user data
+      };
     } catch (error) {
-      return { success: false, message: error.message };
+      return { 
+        success: false, 
+        message: error.message || "Network error during registration" 
+      };
     } finally {
       setLoading(false);
     }
   };
 
-  // -------------------------
-  // Login user
-  // -------------------------
+  // Login user - FIXED with credentials: "include"
   const login = async (email, password) => {
     setLoading(true);
     try {
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // CRITICAL FIX - Add this line
         body: JSON.stringify({ email, password }),
-        credentials: "include", // keep this if using sessions
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to login");
 
-      // If backend returns a JWT:
+      if (!response.ok) {
+        throw new Error(data.message || `Failed to login (Status: ${response.status})`);
+      }
+
+      // Store the JWT token if using JWT
       if (data.token) {
-        localStorage.setItem("token", data.token);
+        localStorage.setItem("authToken", data.token);
       }
-
-      // Fetch profile after login
-      const profileResponse = await fetch(`${API_BASE}/auth/profile`, {
-        credentials: "include", // For sessions
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // For JWT
-        },
-      });
-
-      if (!profileResponse.ok) {
-        throw new Error("Failed to fetch profile after login.");
-      }
-
-      const userData = await profileResponse.json();
-      setUser(userData);
+      
+      // Set user data from response
+      setUser(data.user || { email, name: email.split('@')[0] });
       setIsAuthenticated(true);
-
-      return { success: true };
+      
+      return { success: true, user: data.user };
     } catch (error) {
-      return { success: false, message: error.message };
+      return { 
+        success: false, 
+        message: error.message || "Login failed" 
+      };
     } finally {
       setLoading(false);
     }
   };
 
-  // -------------------------
-  // Logout user
-  // -------------------------
+  // Logout user - FIXED with credentials: "include"
   const logout = async () => {
-    setLoading(true);
     try {
       await fetch(`${API_BASE}/auth/logout`, {
         method: "POST",
-        credentials: "include",
+        headers: getAuthHeaders(),
+        credentials: "include", // CRITICAL FIX - Add this line
       });
-
-      // Clear local storage if using JWT
-      localStorage.removeItem("token");
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error("Logout API call failed:", error);
     } finally {
-      // Clear local state no matter what
+      // Always clear local state
+      localStorage.removeItem("authToken");
       setUser(null);
       setIsAuthenticated(false);
-      setLoading(false);
     }
   };
 
-  // -------------------------
-  // Verify Email
-  // -------------------------
+  // Verify Email - FIXED with credentials: "include"
   const verifyEmail = async (code) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/auth/verify-email/${code}`);
+      const response = await fetch(`${API_BASE}/auth/verify-email/${code}`, {
+        method: "GET",
+        credentials: "include", // Add this line
+      });
+      
       const data = await response.json();
 
-      if (!response.ok) throw new Error(data.message || "Failed to verify email");
+      if (!response.ok) {
+        throw new Error(data.message || `Failed to verify email (Status: ${response.status})`);
+      }
 
       return { success: true, message: data.message };
     } catch (error) {
@@ -159,27 +173,25 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // -------------------------
   // Role Helpers
-  // -------------------------
   const isAdmin = () => user?.role === "admin";
   const isReporter = () => user?.role === "reporter";
 
-  // -------------------------
-  // Disaster CRUD
-  // -------------------------
+  // Disaster CRUD operations - FIXED with credentials: "include"
   const createDisaster = async (disasterData) => {
     setLoading(true);
     try {
       const response = await fetch(`${API_BASE}/api/disasters`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
+        credentials: "include", // Add this line
         body: JSON.stringify(disasterData),
-        credentials: "include",
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to create disaster");
+      if (!response.ok) {
+        throw new Error(data.message || `Failed to create disaster (Status: ${response.status})`);
+      }
 
       return { success: true, message: data.message, disaster: data.disaster };
     } catch (error) {
@@ -194,13 +206,15 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await fetch(`${API_BASE}/api/disasters/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
+        credentials: "include", // Add this line
         body: JSON.stringify(disasterData),
-        credentials: "include",
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to update disaster");
+      if (!response.ok) {
+        throw new Error(data.message || `Failed to update disaster (Status: ${response.status})`);
+      }
 
       return { success: true, message: data.message };
     } catch (error) {
@@ -215,11 +229,14 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await fetch(`${API_BASE}/api/disasters/${id}`, {
         method: "DELETE",
-        credentials: "include",
+        headers: getAuthHeaders(),
+        credentials: "include", // Add this line
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to delete disaster");
+      if (!response.ok) {
+        throw new Error(data.message || `Failed to delete disaster (Status: ${response.status})`);
+      }
 
       return { success: true, message: data.message };
     } catch (error) {
@@ -229,9 +246,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // -------------------------
-  // Context Value
-  // -------------------------
   const value = {
     user,
     isAuthenticated,
@@ -245,6 +259,7 @@ export const AuthProvider = ({ children }) => {
     createDisaster,
     updateDisaster,
     deleteDisaster,
+    getAuthHeaders,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
