@@ -20,7 +20,7 @@ const NonAuthHeader = () => {
         <nav className="flex items-center gap-6">
           <Link
             className="text-gray-600 hover:text-gray-900 text-sm font-medium leading-normal"
-            to="/map"
+            to="/livemap"
           >
             Map
           </Link>

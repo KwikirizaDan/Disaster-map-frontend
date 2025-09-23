@@ -87,6 +87,7 @@ function AppContent() {
           } 
         />
 
+        
         <Route 
           path="/disaster/cards" 
           element={
@@ -226,7 +227,7 @@ function AppContent() {
         
         {/* Map page - public but shows different header based on auth status */}
         <Route 
-          path="/map" 
+          path="/livemap" 
           element={<LiveDisasterMap />} 
         />
         
@@ -250,7 +251,7 @@ function HomeRedirect() {
   if (isAuthenticated) {
     return <Navigate to="/disasters" replace />;
   } else {
-    return <Navigate to="/map" replace />;
+    return <Navigate to="/livemap" replace />;
   }
 }
 
