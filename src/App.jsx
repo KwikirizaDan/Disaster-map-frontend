@@ -20,6 +20,7 @@ import PublicDisasterCards from './components/PublicDisasterCards';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import ConfirmationCodePage from './components/ConfirmationCodePage';
 import EmailVerifiedPage from './components/EmailVerifiedPage';
+import Disasters from './components/Disasters';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -138,6 +139,16 @@ function AppContent() {
           element={
             <PublicLayout>
               <Dashboard />
+            </PublicLayout>
+          } 
+        />
+
+
+        <Route 
+          path="/diz" 
+          element={
+            <PublicLayout>
+              <Disasters />
             </PublicLayout>
           } 
         />
