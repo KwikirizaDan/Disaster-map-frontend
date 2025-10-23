@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { Icon, divIcon, point } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import NonAuthHeader from "./NonAuthHeader";
+import { BASE_API_URL } from "@/lib/api";
 
 // Custom marker with radar ping effect
 const AnimatedMarker = ({ position, disaster, onClick }) => {
@@ -188,7 +189,7 @@ const DisasterHeatMap = () => {
     const fetchDisasters = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch("http://127.0.0.1:5000/api/disasters");
+        const response = await fetch(`${BASE_API_URL}/disasters`);
         if (!response.ok) throw new Error("Failed to fetch disaster data");
         const data = await response.json();
         setDisasters(data);

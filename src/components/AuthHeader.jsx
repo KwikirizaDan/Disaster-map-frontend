@@ -1,6 +1,9 @@
+"use client";
+
 import React, { useState, useRef, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import Link from 'next/link';
 import { useAuth } from '../contexts/AuthContext';
+import { ModeToggle } from './ThemeToggle';
 
 const AuthHeader = () => {
   const { user, logout } = useAuth();
@@ -19,7 +22,7 @@ const AuthHeader = () => {
   }, []);
 
   return (
-    <header className="flex items-center justify-between whitespace-nowrap border-b border-gray-200 px-10 py-3 bg-white">
+    <header className="flex items-center justify-between whitespace-nowrap border-b border-gray-200 px-10 py-3 bg-white dark:bg-gray-800">
       {/* Left side: Logo + Nav */}
       <div className="flex items-center gap-8">
         <div className="flex items-center gap-4 text-gray-900">
@@ -30,40 +33,31 @@ const AuthHeader = () => {
               className="h-8 w-8"
             />
           </div>
-          <h2 className="text-gray-900 text-lg font-bold leading-tight tracking-[-0.015em]">
+          <h2 className="text-gray-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">
             Disaster Map Uganda
           </h2>
         </div>
         <nav className="flex items-center gap-6">
-          <NavLink
-            to="/"
-            end
-            className={({ isActive }) =>
-              isActive
-                ? 'text-gray-900 font-semibold text-sm leading-normal'
-                : 'text-gray-600 hover:text-gray-900 text-sm font-medium leading-normal'
-            }
-          >
-            Datagrid
-          </NavLink>
-          <NavLink
-            to="/cards"
-            className={({ isActive }) =>
-              isActive
-                ? 'text-gray-900 font-semibold text-sm leading-normal'
-                : 'text-gray-600 hover:text-gray-900 text-sm font-medium leading-normal'
-            }
-          >
-            Cards
-          </NavLink>
+          <Link href="/" legacyBehavior>
+            <a className='text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm font-medium leading-normal'>
+              Datagrid
+            </a>
+          </Link>
+          <Link href="/cards" legacyBehavior>
+            <a className='text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm font-medium leading-normal'>
+              Cards
+            </a>
+          </Link>
         </nav>
       </div>
 
       {/* Right side: Search, Notifications, Profile */}
       <div className="flex items-center gap-4">
-        <button className="flex h-10 w-10 items-center justify-center rounded-md bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900">
+        <button className="flex h-10 w-10 items-center justify-center rounded-md bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white">
           <span className="material-symbols-outlined text-xl">notifications</span>
         </button>
+
+        <ModeToggle />
 
         {/* Profile dropdown */}
         <div className="relative" ref={profileMenuRef}>
@@ -78,29 +72,25 @@ const AuthHeader = () => {
           ></button>
 
           {isProfileMenuOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-              <div className="px-4 py-2 border-b border-gray-100">
-                <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
-                <p className="text-xs text-gray-500">{user?.email || 'user@example.com'}</p>
+            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-600">
+              <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-600">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name || 'User'}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email || 'user@example.com'}</p>
               </div>
-              <NavLink
-                to="/profile"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => setIsProfileMenuOpen(false)}
-              >
-                Profile Settings
-              </NavLink>
-              <NavLink
-                to="/settings"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => setIsProfileMenuOpen(false)}
-              >
-                Account Settings
-              </NavLink>
-              <div className="border-t border-gray-100 my-1"></div>
+              <Link href="/profile" legacyBehavior>
+                <a className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600" onClick={() => setIsProfileMenuOpen(false)}>
+                  Profile Settings
+                </a>
+              </Link>
+              <Link href="/settings" legacyBehavior>
+                <a className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600" onClick={() => setIsProfileMenuOpen(false)}>
+                  Account Settings
+                </a>
+              </Link>
+              <div className="border-t border-gray-100 dark:border-gray-600 my-1"></div>
               <button
                 onClick={logout}
-                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                className="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600"
               >
                 Logout
               </button>
